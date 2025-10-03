@@ -81,13 +81,13 @@ const EventListScreen = () => {
     <View style={styles.container}>
       <View style={styles.topBar}>
         <Text variant="titleMedium" style={styles.listTitle}>Events</Text>
-        <Button
+        {/* <Button
           mode="contained"
           onPress={() => router.push('/event-form')}
           compact
         >
           New Event
-        </Button>
+        </Button> */}
       </View>
       <FlatList
         data={events}

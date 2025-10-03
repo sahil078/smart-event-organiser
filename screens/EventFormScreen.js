@@ -19,6 +19,10 @@ const EventFormScreen = () => {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [collaborators, setCollaborators] = useState([]);
+  const [invitations, setInvitations] = useState([]);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   useEffect(() => {
     if (eventId) {
@@ -33,6 +37,8 @@ const EventFormScreen = () => {
         ...response.data,
         date: new Date(response.data.date)
       });
+      setCollaborators(response.data.event_collaborators || []);
+      setInvitations(response.data.event_invitations || []);
     } catch (error) {
       console.error('Failed to load event:', error);
       alert('Failed to load event');
@@ -91,6 +97,20 @@ const EventFormScreen = () => {
       alert('Failed to save event');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleInvite = async () => {
+    if (!inviteEmail) return;
+    setInviteLoading(true);
+    try {
+      await eventsAPI.invite(eventId, inviteEmail.trim().toLowerCase());
+      setInviteEmail('');
+      await loadEvent(); // refresh lists
+    } catch (e) {
+      alert(e?.response?.data?.error || 'Failed to send invite');
+    } finally {
+      setInviteLoading(false);
     }
   };
 
@@ -188,6 +208,57 @@ const EventFormScreen = () => {
           >
             {eventId ? 'Update Event' : 'Create Event'}
           </Button>
+
+          {eventId && (
+            <View style={{ marginTop: 24 }}>
+              <Text variant="titleSmall" style={{ marginBottom: 8 }}>Collaborators</Text>
+              {collaborators.map(c => (
+                <Text key={c.user?.id} variant="bodySmall" style={{ marginBottom: 4 }}>
+                  • {c.user?.email}
+                </Text>
+              ))}
+              {collaborators.length === 0 && (
+                <Text variant="bodySmall" style={{ color: '#666', marginBottom: 8 }}>
+                  No collaborators yet
+                </Text>
+              )}
+
+              <Text variant="titleSmall" style={{ marginTop: 16, marginBottom: 8 }}>Pending Invitations</Text>
+              {invitations
+                .filter(i => i.status === 'pending')
+                .map(i => (
+                  <Text key={i.id} variant="bodySmall" style={{ marginBottom: 4 }}>
+                    • {i.email} (pending)
+                  </Text>
+                ))}
+              {invitations.filter(i => i.status === 'pending').length === 0 && (
+                <Text variant="bodySmall" style={{ color: '#666', marginBottom: 8 }}>
+                  No pending invites
+                </Text>
+              )}
+
+              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                <TextInput
+                  label="Invite email"
+                  value={inviteEmail}
+                  onChangeText={setInviteEmail}
+                  mode="outlined"
+                  style={{ flex: 1 }}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+                <Button
+                  mode="contained"
+                  onPress={handleInvite}
+                  loading={inviteLoading}
+                  disabled={inviteLoading || !inviteEmail}
+                  style={{ alignSelf: 'flex-start' }}
+                >
+                  Invite
+                </Button>
+              </View>
+            </View>
+          )}
         </Card.Content>
       </Card>
     </ScrollView>

@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 // Use correct local dev host per platform
 const LOCAL_API_HOST =
   Platform.OS === 'android'
-    ? 'http://10.0.2.2:3001' // Android emulator loopback to host
+    ? 'http://localhost:3001' // Android emulator loopback to host
     : 'http://localhost:3001'; // iOS simulator / web
 
 // Allow override via env (expo start --clear; set EXPO_PUBLIC_API_URL)
@@ -29,6 +29,10 @@ export const eventsAPI = {
   update: (id, eventData) => api.put(`/events/${id}`, eventData),
   addCollaborator: (eventId, email) =>
     api.post(`/events/${eventId}/collaborators`, { email }),
+  invite: (eventId, email) =>
+    api.post(`/events/${eventId}/invitations`, { email }),
+  acceptInvitation: (eventId, inviteId) =>
+    api.post(`/events/${eventId}/invitations/${inviteId}/accept`),
 };
 
 export const aiAPI = {
